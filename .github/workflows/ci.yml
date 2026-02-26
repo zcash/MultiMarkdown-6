@@ -1,14 +1,13 @@
-name: Makefile CI
+name: CI
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "main" ]
 
 jobs:
   build:
-
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest]
@@ -16,36 +15,11 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-    - name: Configure make
-      run: make release
+    - uses: cachix/install-nix-action@v27
 
-    - name: Test build
-      run: cd build && make all
-
-    - name: Test install
-      run: cd build && sudo make install
-      
-    - name: Run tests
-      run: cd build && ctest
-
-  build-windows:
-
-    strategy:
-      matrix:
-        platform: [windows-latest]
-
-    runs-on: ${{ matrix.platform }}
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Configure make
-      run: mkdir build && cd build && cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ..
-
-    - name: Test build
-      run: cd build && make
-
-    - name: Run tests
-      run: cd build && ctest
+    - name: Build and test
+      run: nix build -L
